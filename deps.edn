@@ -1,0 +1,32 @@
+{:deps {org.clojure/clojure                         {:mvn/version "1.10.3"}
+        org.clojure/clojurescript                   {:mvn/version "1.10.597"}
+        io.replikativ/datahike                      {:git/url "https://github.com/replikativ/datahike.git"
+                                                     :sha "e981e72f258699254b793937c9326dcf0d83ef35"}
+        io.replikativ/datahike-client               {:git/url "https://github.com/replikativ/datahike-client.git"
+                                                     :sha "a016fa524c2e1abb29a86dad30c2ab3434bd43a6"}}
+
+ :paths ["src" "target/classes"]
+
+ :aliases {:dev {:extra-paths ["dev" "benchmark/src"]
+                 :extra-deps {org.clojure/tools.namespace {:mvn/version "0.2.11"}
+                              cider/cider-nrepl           {:mvn/version "0.19.0"}
+                              nrepl/nrepl                 {:mvn/version "0.5.3"}
+                              clj-http/clj-http           {:mvn/version "3.11.0"}
+                              org.clojure/tools.cli       {:mvn/version "1.0.194"}}}
+
+           :test {:extra-paths ["test"]
+                  :extra-deps {org.clojure/clojurescript {:mvn/version "1.10.516"}
+                               lambdaisland/kaocha       {:mvn/version "1.0.632"}
+                               lambdaisland/kaocha-cljs  {:mvn/version "0.0-71"}}}
+
+           :repl {:extra-deps {cider/cider-nrepl           {:mvn/version "0.19.0"}
+                               nrepl/nrepl                 {:mvn/version "0.5.3"}
+                               org.clojure/tools.namespace {:mvn/version "0.2.11"}}
+                  :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
+
+           :format {:extra-deps {cljfmt/cljfmt {:mvn/version "0.7.0"}}
+                    :main-opts ["-m" "cljfmt.main" "check"]}
+
+           :ffix {:extra-deps {cljfmt/cljfmt {:mvn/version "0.7.0"}}
+                  :main-opts ["-m" "cljfmt.main" "fix"]}}}
+
