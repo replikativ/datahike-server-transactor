@@ -27,14 +27,15 @@
 
 (defrecord DatahikeServerTransactor [client-config]
   PTransactor
-  (send-transaction! [_ tx-data _]
+  (send-transaction! [_ tx-data tx-meta _]
     (let [p (promise-chan)]
       (log/debug "Sending transaction to datahike-server" client-config (count tx-data))
       (log/trace "Transacting data " tx-data)
       (put! p
             (api-request "post"
                          (str (:endpoint client-config) "transact")
-                         {:tx-data tx-data}
+                         {:tx-data tx-data
+                          :tx-meta tx-meta}
                          {:headers
                           (merge
                            {:db-name (:db-name client-config)}
