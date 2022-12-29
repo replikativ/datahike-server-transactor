@@ -1,11 +1,17 @@
 (ns datahike-server-transactor.core
   (:require [clojure.edn :as edn]
             [datahike.transactor :refer [PTransactor create-transactor]]
-            [clj-http.client :as client]
+            [clj-http.lite.client :as client]
             [taoensso.timbre :as log]
-            [clojure.core.async :refer [promise-chan put!]]))
+            [clojure.core.async :refer [promise-chan put!]]
+            [cognitect.transit :as transit])
+  (:import [java.io ByteArrayOutputStream]))
 
-(def edn-fmt "application/edn")
+(def transit-fmt "application/transit+json")
+
+(def MEGABYTE (* 1024 1024))
+
+(def MAXPAYLOAD (* 4 MEGABYTE))
 
 (defn api-request
   ([method url]
@@ -13,17 +19,19 @@
   ([method url data]
    (api-request method url data nil))
   ([method url data opts]
-   (let [encode str]
-     (-> (client/request (merge {:url url
-                                 :method method
-                                 :throw-exceptions? false
-                                 :content-type edn-fmt
-                                 :accept edn-fmt}
-                                (when (or (= method :post) data)
-                                  {:body (encode data)})
-                                opts))
-        :body
-        edn/read-string ))))
+   (let [out (ByteArrayOutputStream. MAXPAYLOAD)
+         writer (transit/writer out :json)
+         _ (transit/write writer data)
+         response (client/request (merge {:url               url
+                                          :method            method
+                                          :throw-exceptions? false
+                                          :content-type      transit-fmt
+                                          :accept            transit-fmt
+                                          :as                :stream}
+                                         (when (or (= method :post) data)
+                                           {:body (.toString out)})
+                                         opts))]
+     (transit/read (transit/reader (:body response) :json)))))
 
 (defrecord DatahikeServerTransactor [client-config]
   PTransactor
@@ -34,13 +42,15 @@
       (put! p
             (api-request "post"
                          (str (:endpoint client-config) "transact")
-                         {:tx-data tx-data
-                          :tx-meta tx-meta}
+                         (merge
+                          (when tx-meta
+                            {:tx-meta tx-meta})
+                          {:tx-data tx-data})
                          {:headers
                           (merge
-                           {:db-name (:db-name client-config)}
+                           {"db-name" (:db-name client-config)}
                            (when (:token client-config)
-                             {:authorization (:token client-config)}))}))
+                             {"authorization" (:token client-config)}))}))
       p))
   (shutdown [_])
   (streaming? [_] false))

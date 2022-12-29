@@ -1,6 +1,7 @@
 {:deps {org.clojure/clojure                         {:mvn/version "1.10.3"}
         org.clojure/clojurescript                   {:mvn/version "1.10.597"}
-        clj-http/clj-http                           {:mvn/version "3.12.3"}}
+        org.clj-commons/clj-http-lite               {:mvn/version "1.0.13"}
+        com.cognitect/transit-clj                   {:mvn/version "1.0.324"}}
 
  :paths ["src" "target/classes"]
 
