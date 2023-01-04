@@ -8,17 +8,13 @@
 
 (def transit-fmt "application/transit+json")
 
-(def MEGABYTE (* 1024 1024))
-
-(def MAXPAYLOAD (* 4 MEGABYTE))
-
 (defn api-request
   ([method url]
    (api-request method url nil))
   ([method url data]
    (api-request method url data nil))
   ([method url data opts]
-   (let [out (ByteArrayOutputStream. MAXPAYLOAD)
+   (let [out (ByteArrayOutputStream.)
          writer (transit/writer out :json)
          _ (transit/write writer data)
          response (client/request (merge {:url               url
