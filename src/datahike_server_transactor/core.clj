@@ -1,5 +1,5 @@
 (ns datahike-server-transactor.core
-  (:require [datahike.transactor :refer [PTransactor create-transactor]]
+  (:require [datahike.writer :refer [PWriter create-writer create-database delete-database]]
             [clj-http.lite.client :as client]
             [taoensso.timbre :as log]
             [clojure.core.async :refer [promise-chan put!]]
@@ -32,20 +32,17 @@
                                          opts))]
      (transit/read (transit/reader (:body response) :json)))))
 
-(defrecord DatahikeServerTransactor [client-config]
-  PTransactor
+(defrecord DatahikeServerWriter [client-config]
+  PWriter
   (-dispatch! [_ arg-map]
-    (let [{:keys [tx-fn tx-data tx-meta]} arg-map
+    (let [{:keys [op args]} arg-map
           p (promise-chan)]
-      (log/debug "Sending transaction to datahike-server" client-config (count tx-data))
-      (log/trace "Transacting data " tx-data)
+      (log/debug "Sending operation to datahike-server:" op)
+      (log/debug "Arguments:" arg-map)
       (put! p
             (api-request "post"
-                         (str (:endpoint client-config) "/transact")
-                         (merge
-                          (when tx-meta
-                            {:tx-meta tx-meta})
-                          {:tx-data tx-data})
+                         (str (:endpoint client-config) "/" op)
+                         (first args)
                          {:headers
                           (merge
                            {"db-name" (:db-name client-config)}
@@ -55,9 +52,16 @@
   (-shutdown [_])
   (-streaming? [_] false))
 
-(defmethod create-transactor :datahike-server
+(defmethod create-writer :datahike-server
   [config _]
-  (log/debug "Creating datahike-server transactor for " config)
+  (log/debug "Creating datahike-server writer for " config)
   (let [client-config (:client-config config)]
-    (->DatahikeServerTransactor client-config)))
+    (->DatahikeServerWriter client-config)))
 
+(defmethod create-database :datahike-server
+  [& args]
+  (throw (ex-info "Not supported yet." {:type :not-supported-yet})))
+
+(defmethod delete-database :datahike-server
+  [& args]
+  (throw (ex-info "Not supported yet." {:type :not-supported-yet})))
