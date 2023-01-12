@@ -38,7 +38,7 @@
     (let [{:keys [op args]} arg-map
           p (promise-chan)]
       (log/debug "Sending operation to datahike-server:" op)
-      (log/debug "Arguments:" arg-map)
+      (log/trace "Arguments:" arg-map)
       (put! p
             (api-request "post"
                          (str (:endpoint client-config) "/" op)
